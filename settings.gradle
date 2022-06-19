@@ -1,0 +1,5 @@
+rootProject.name = 'cdk-apigateway-example'
+
+include 'cdk'
+include 'lambda'
+
