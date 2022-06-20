@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import software.amazon.awscdk.Duration;
@@ -31,6 +32,7 @@ import software.amazon.awscdk.services.lambda.Code;
 import software.amazon.awscdk.services.lambda.Function;
 import software.amazon.awscdk.services.lambda.FunctionProps;
 import software.amazon.awscdk.services.lambda.ILayerVersion;
+import software.amazon.awscdk.services.lambda.LayerVersion;
 import software.amazon.awscdk.services.lambda.Runtime;
 
 public class CdkSimpleApiGatewayToLambdaStack extends Stack {
@@ -66,6 +68,42 @@ public class CdkSimpleApiGatewayToLambdaStack extends Stack {
 		items.addMethod("GET", getAllIntegration);
 
 		addCorsOptions(items);
+		
+		Map<String, String> lambdaEnvMap2 = new HashMap<>();
+		lambdaEnvMap2.put("PRIMARY_KEY", "itemId");
+		String additionalSourcePath = System.getenv("CODEBUILD_SRC_DIR_LambdaBuildOutput")
+				+ "/example-cdk-additionallambda-0.0.1-SNAPSHOT.jar";
+		if (System.getenv("CODEBUILD_SRC_DIR_LambdaBuildOutput") == null
+				|| System.getenv("CODEBUILD_SRC_DIR_LambdaBuildOutput").isEmpty()) {
+			additionalSourcePath = "C:\\Users\\JohannesKoch\\git-private\\cdk-simple-api-gateway-to-lambda\\additional-lambda\\build\\libs\\example-cdk-additionallambda-0.0.1-SNAPSHOT.jar";
+		}
+		
+		
+		@NotNull
+		String layerSourcePath =  System.getenv("CODEBUILD_SRC_DIR_LambdaBuildOutput")
+				+ "/example-cdk-additionallambda-0.0.1-SNAPSHOT.jar";
+				if (System.getenv("CODEBUILD_SRC_DIR_LambdaBuildOutput") == null
+						|| System.getenv("CODEBUILD_SRC_DIR_LambdaBuildOutput").isEmpty()) {
+					layerSourcePath = "C:\\Users\\JohannesKoch\\git-private\\cdk-simple-api-gateway-to-lambda\\layer\\build\\libs\\layer-0.0.1-SNAPSHOT.jar";
+				}
+		
+		LayerVersion layerVersion = LayerVersion.Builder.create(this, "LambdaLayer").layerVersionName("LambdaLayerExample").compatibleRuntimes(List.of(Runtime.JAVA_11)).code(Code.fromAsset(layerSourcePath)).build();
+		
+		
+		Function additionalAccountFunction = new Function(this, "AdditionalExampleLambdaFunction",
+				getLambdaFunctionProps(additionalSourcePath, lambdaEnvMap2, "info.lockhead.cdk.lambda.AdditionalExampleLambdaFunction"));
+		additionalAccountFunction.addLayers(layerVersion);
+		@Nullable
+		IRole additionalRole = additionalAccountFunction.getRole();
+		additionalRole.addToPrincipalPolicy(PolicyStatement.Builder.create().effect(Effect.ALLOW).resources(Arrays.asList("*"))
+				.actions(Arrays.asList("ssm:DescribeParameters")).build());
+		
+		IResource additionalItems = api.getRoot().addResource("additional");
+		
+		Integration getAllAdditionalIntegration = new LambdaIntegration(additionalAccountFunction);
+		additionalItems.addMethod("GET", getAllAdditionalIntegration);
+		
+		addCorsOptions(additionalItems);
 	}
 
 	private FunctionProps getLambdaFunctionProps(String sourcePath, Map<String, String> lambdaEnvMap, String handler) {
