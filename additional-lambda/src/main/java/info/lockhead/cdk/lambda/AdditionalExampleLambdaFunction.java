@@ -4,32 +4,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.UUID;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 
 import info.lockhead.cdk.lambda.model.CDKExampleBean;
 import info.lockhead.cdk.layer.BoardParameters;
 import info.lockhead.cdk.layer.GatewayResponse;
-import net.pegasusgalaxy.data.Construction;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.Builder;
 
 public class AdditionalExampleLambdaFunction implements RequestHandler<BoardParameters, GatewayResponse> {
 
