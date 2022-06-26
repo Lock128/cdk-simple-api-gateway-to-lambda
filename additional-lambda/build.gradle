@@ -21,6 +21,7 @@ implementation platform('software.amazon.awssdk:bom:2.16.29')
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
     testImplementation 'org.assertj:assertj-core:3.22.0'
     implementation 'software.amazon.awssdk:lambda'
+    implementation 'software.amazon.awssdk:dynamodb-enhanced'
     implementation 'com.amazonaws:aws-lambda-java-core:1.2.1'
     implementation project(':layer')
 }

@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import software.amazon.awscdk.Duration;
+import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
 import software.amazon.awscdk.services.apigateway.IResource;
@@ -25,6 +26,12 @@ import software.amazon.awscdk.services.apigateway.PassthroughBehavior;
 // import software.amazon.awscdk.Duration;
 // import software.amazon.awscdk.services.sqs.Queue;
 import software.amazon.awscdk.services.apigateway.RestApi;
+import software.amazon.awscdk.services.dynamodb.Attribute;
+import software.amazon.awscdk.services.dynamodb.AttributeType;
+import software.amazon.awscdk.services.dynamodb.BillingMode;
+import software.amazon.awscdk.services.dynamodb.GlobalSecondaryIndexProps;
+import software.amazon.awscdk.services.dynamodb.Table;
+import software.amazon.awscdk.services.dynamodb.TableProps;
 import software.amazon.awscdk.services.iam.Effect;
 import software.amazon.awscdk.services.iam.IRole;
 import software.amazon.awscdk.services.iam.PolicyStatement;
@@ -104,7 +111,23 @@ public class CdkSimpleApiGatewayToLambdaStack extends Stack {
 		additionalItems.addMethod("GET", getAllAdditionalIntegration);
 		
 		addCorsOptions(additionalItems);
+		
+		Table initCdkExampleTable = initCdkExampleTable();
+		initCdkExampleTable.grantReadWriteData(additionalAccountFunction);
 	}
+	
+	private Table initCdkExampleTable() {
+		TableProps tableProps2;
+		Attribute partitionKey = Attribute.builder().name("cdkId").type(AttributeType.STRING).build();
+		Attribute seconfPartitionKey = Attribute.builder().name("cdkCategory").type(AttributeType.STRING).build();
+		tableProps2 = TableProps.builder().tableName("CDK_EXAMPLE_TABLE").partitionKey(partitionKey)
+				.removalPolicy(RemovalPolicy.DESTROY).billingMode(BillingMode.PAY_PER_REQUEST).build();
+		Table researchTable = new Table(this, "CDK_EXAMPLE_TABLE", tableProps2);
+		researchTable.addGlobalSecondaryIndex(
+				GlobalSecondaryIndexProps.builder().indexName("cdkCategory").partitionKey(seconfPartitionKey).build());
+		return researchTable;
+	}
+	
 
 	private FunctionProps getLambdaFunctionProps(String sourcePath, Map<String, String> lambdaEnvMap, String handler) {
 		// adding layers enables us to build up dependencies
