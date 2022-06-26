@@ -13,3 +13,4 @@ cdk.out
 
 /.gradle/
 bin/
+/build/
