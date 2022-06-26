@@ -82,7 +82,7 @@ public class CdkSimpleApiGatewayToLambdaStack extends Stack {
 				+ "/example-cdk-additionallambda-0.0.1-SNAPSHOT.jar";
 		if (System.getenv("CODEBUILD_SRC_DIR_LambdaBuildOutput") == null
 				|| System.getenv("CODEBUILD_SRC_DIR_LambdaBuildOutput").isEmpty()) {
-			additionalSourcePath = "C:\\Users\\JohannesKoch\\git-private\\cdk-simple-api-gateway-to-lambda\\additional-lambda\\build\\libs\\example-cdk-additionallambda-0.0.1-SNAPSHOT.jar";
+			additionalSourcePath = "C:\\Users\\JohannesKoch\\git-private\\cdk-simple-api-gateway-to-lambda\\additional-lambda\\build\\libs\\additional-lambda-0.0.1-SNAPSHOT.jar";
 		}
 		
 		
@@ -134,7 +134,7 @@ public class CdkSimpleApiGatewayToLambdaStack extends Stack {
 		List<? extends ILayerVersion> layersList = new ArrayList<ILayerVersion>();
 
 		return FunctionProps.builder().code(Code.fromAsset(sourcePath)).handler(handler).runtime(Runtime.JAVA_11)
-				.environment(lambdaEnvMap).timeout(Duration.seconds(900)).memorySize(128).layers(layersList).build();
+				.environment(lambdaEnvMap).timeout(Duration.seconds(900)).memorySize(256).layers(layersList).build();
 	}
 
 	private void addCorsOptions(IResource item) {
