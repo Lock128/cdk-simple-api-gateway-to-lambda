@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import software.amazon.awscdk.Duration;
+import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
 import software.amazon.awscdk.services.apigateway.IResource;
@@ -25,6 +26,12 @@ import software.amazon.awscdk.services.apigateway.PassthroughBehavior;
 // import software.amazon.awscdk.Duration;
 // import software.amazon.awscdk.services.sqs.Queue;
 import software.amazon.awscdk.services.apigateway.RestApi;
+import software.amazon.awscdk.services.dynamodb.Attribute;
+import software.amazon.awscdk.services.dynamodb.AttributeType;
+import software.amazon.awscdk.services.dynamodb.BillingMode;
+import software.amazon.awscdk.services.dynamodb.GlobalSecondaryIndexProps;
+import software.amazon.awscdk.services.dynamodb.Table;
+import software.amazon.awscdk.services.dynamodb.TableProps;
 import software.amazon.awscdk.services.iam.Effect;
 import software.amazon.awscdk.services.iam.IRole;
 import software.amazon.awscdk.services.iam.PolicyStatement;
@@ -75,7 +82,7 @@ public class CdkSimpleApiGatewayToLambdaStack extends Stack {
 				+ "/example-cdk-additionallambda-0.0.1-SNAPSHOT.jar";
 		if (System.getenv("CODEBUILD_SRC_DIR_LambdaBuildOutput") == null
 				|| System.getenv("CODEBUILD_SRC_DIR_LambdaBuildOutput").isEmpty()) {
-			additionalSourcePath = "C:\\Users\\JohannesKoch\\git-private\\cdk-simple-api-gateway-to-lambda\\additional-lambda\\build\\libs\\example-cdk-additionallambda-0.0.1-SNAPSHOT.jar";
+			additionalSourcePath = "C:\\Users\\JohannesKoch\\git-private\\cdk-simple-api-gateway-to-lambda\\additional-lambda\\build\\libs\\additional-lambda-0.0.1-SNAPSHOT.jar";
 		}
 		
 		
@@ -104,14 +111,30 @@ public class CdkSimpleApiGatewayToLambdaStack extends Stack {
 		additionalItems.addMethod("GET", getAllAdditionalIntegration);
 		
 		addCorsOptions(additionalItems);
+		
+		Table initCdkExampleTable = initCdkExampleTable();
+		initCdkExampleTable.grantReadWriteData(additionalAccountFunction);
 	}
+	
+	private Table initCdkExampleTable() {
+		TableProps tableProps2;
+		Attribute partitionKey = Attribute.builder().name("cdkId").type(AttributeType.STRING).build();
+		Attribute seconfPartitionKey = Attribute.builder().name("cdkCategory").type(AttributeType.STRING).build();
+		tableProps2 = TableProps.builder().tableName("CDK_EXAMPLE_TABLE").partitionKey(partitionKey)
+				.removalPolicy(RemovalPolicy.DESTROY).billingMode(BillingMode.PAY_PER_REQUEST).build();
+		Table researchTable = new Table(this, "CDK_EXAMPLE_TABLE", tableProps2);
+		researchTable.addGlobalSecondaryIndex(
+				GlobalSecondaryIndexProps.builder().indexName("cdkCategory").partitionKey(seconfPartitionKey).build());
+		return researchTable;
+	}
+	
 
 	private FunctionProps getLambdaFunctionProps(String sourcePath, Map<String, String> lambdaEnvMap, String handler) {
 		// adding layers enables us to build up dependencies
 		List<? extends ILayerVersion> layersList = new ArrayList<ILayerVersion>();
 
 		return FunctionProps.builder().code(Code.fromAsset(sourcePath)).handler(handler).runtime(Runtime.JAVA_11)
-				.environment(lambdaEnvMap).timeout(Duration.seconds(900)).memorySize(128).layers(layersList).build();
+				.environment(lambdaEnvMap).timeout(Duration.seconds(900)).memorySize(256).layers(layersList).build();
 	}
 
 	private void addCorsOptions(IResource item) {
